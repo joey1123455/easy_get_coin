@@ -2,43 +2,42 @@
 
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
-/** 
+/**
  * @title Game records
- * @dev Getter and setter methods 
+ * @dev Getter and setter methods
  */
 contract GameHistory {
-
     struct GameSession {
-        uint gid;     //game ID
-        string gtid;  //game ID
-        string uid;   //user ID
-        string data;  //game data
-        uint time;    //game time stamp
+        uint256 gid; //game ID
+        string gtid; //game ID
+        string uid; //user ID
+        string data; //game data
+        uint256 time; //game time stamp
     }
 
     struct Payment {
         address sender; //sender's address
-        uint amount;    //total amount sent
-        uint time;      //timestamp of the payment
+        uint256 amount; //total amount sent
+        uint256 time; //timestamp of the payment
     }
 
     address private immutable owner;
     uint256 private immutable oneEGC;
     address public tokenAddressEGC;
     // address public tokenAddressEGC = address(0xa2630a1178bA5774395Aa3a21AfDD4c3E654a612);
-    
 
     // event for EVM logging
     event OwnerSet(address indexed oldOwner, address indexed newOwner);
-    event ReceivedLessThanTarget(address indexed sender, uint amount);
-    event Received(address indexed sender, uint amount);
+    event ReceivedLessThanTarget(address indexed sender, uint256 amount);
+    event Received(address indexed sender, uint256 amount);
 
-    mapping(uint => GameSession[]) gameHistory; //historical data for each game 
+    mapping(uint256 => GameSession[]) gameHistory; //historical data for each game
     mapping(string => GameSession[]) userHistory; //historical data for each user
     mapping(address => Payment[]) payments; //historical data for each payment
-    mapping(address => uint) totalPaid; //total amount paid by each sender
+    mapping(address => uint256) totalPaid; //total amount paid by each sender
 
     // constructor(address _tokenAddressEGC, uint _oneEGC) {
     //     owner = msg.sender; // 'msg.sender' is sender of current call, contract deployer for a constructor
@@ -67,7 +66,9 @@ contract GameHistory {
      * @param _data The game data to be stored.
      * @param _time The timestamp of when the game data is stored.
      */
-    function storeGameData(uint _gid, string memory _gtid, string memory _uid, string memory _data, uint _time) public onlyOwner {
+    function storeGameData(uint256 _gid, string memory _gtid, string memory _uid, string memory _data, uint256 _time)
+        public
+    {
         GameSession memory currentGame_ = GameSession(_gid, _gtid, _uid, _data, _time);
 
         gameHistory[_gid].push(currentGame_);
@@ -79,7 +80,7 @@ contract GameHistory {
      * @param _gid The unique game ID for which the game history is to be retrieved.
      * @return An array of GameSession structs representing the game history for the specified game ID.
      */
-    function getGameHistory(uint _gid) public view returns (GameSession[] memory) {
+    function getGameHistory(uint256 _gid) public view returns (GameSession[] memory) {
         return gameHistory[_gid];
     }
 
@@ -108,7 +109,7 @@ contract GameHistory {
      * @param _user The address of the user.
      * @return The total amount paid by the user.
      */
-    function userTotal(address _user) public view returns (uint) {
+    function userTotal(address _user) public view returns (uint256) {
         return totalPaid[_user];
     }
 
@@ -128,22 +129,17 @@ contract GameHistory {
      * @notice The amount of EGC tokens bought is equal to the amount of Ether sent.
      * @notice Requires that the amount of Ether sent is greater than the minimum amount (one EGC token).
      */
-    function buyEgc() public payable {
-        if (msg.value < oneEGC) {
-            emit ReceivedLessThanTarget(msg.sender, msg.value);
-            revert("Received amount is less than the target amount");
-        }
-        emit Received(msg.sender, msg.value);
+    // function buyEgc() internal {
+    //     if (msg.value < oneEGC) {
+    //         emit ReceivedLessThanTarget(msg.sender, msg.value);
+    //         revert("Received amount is less than the target amount");
+    //     }
+    //     emit Received(msg.sender, msg.value);
 
-        payments[msg.sender].push(Payment({
-            sender: msg.sender,
-            amount: msg.value,
-            time: block.timestamp
-        }));
-        totalPaid[msg.sender] += msg.value;
-        sendEgc(msg.sender, msg.value);
-    }
-
+    //     payments[msg.sender].push(Payment({sender: msg.sender, amount: msg.value, time: block.timestamp}));
+    //     totalPaid[msg.sender] += msg.value;
+    //     sendEgc(msg.sender, msg.value);
+    // }
 
     /**
      * @dev Fallback function to receive Ether.
@@ -151,5 +147,14 @@ contract GameHistory {
      */
     receive() external payable {
         emit Received(msg.sender, msg.value);
+        if (msg.value < oneEGC) {
+            emit ReceivedLessThanTarget(msg.sender, msg.value);
+            revert("Received amount is less than the target amount");
+        }
+        emit Received(msg.sender, msg.value);
+
+        payments[msg.sender].push(Payment({sender: msg.sender, amount: msg.value, time: block.timestamp}));
+        totalPaid[msg.sender] += msg.value;
+        sendEgc(msg.sender, msg.value);
     }
 }
