@@ -1,66 +1,30 @@
-## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+# The Go Server
+The server was built using Go version 1.22.1
 
-Foundry consists of:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### Set up the project
+* Install [Go compiler](https://go.dev/doc/install)
 
-## Documentation
+* Create an env file following the format of env.example
+`
+INFURA_APIKEY=
+PRIVATE_KEY=
+CONTRACT_ADDRESS=
+NODE_URL=
+MODE=release
+API_VERSION=
+API_HOST=
+PORT=
+ORIGIN=
+CHAIN_KEY=
+CALLBACK=
+`
 
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
+### Run the server
 ```shell
-$ forge build
+go run .
 ```
 
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+### Docs
+Swagger docs can be found at /api/swagger/index.html
