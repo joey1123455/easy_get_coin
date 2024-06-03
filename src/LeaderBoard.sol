@@ -123,25 +123,6 @@ contract GameHistory {
     }
 
     /**
-     * @dev Buys EGC tokens using Ether.
-     *      Sends the received Ether to the EGC token contract to buy the tokens.
-     *      Keeps track of the payments and total amount paid by the sender.
-     * @notice The amount of EGC tokens bought is equal to the amount of Ether sent.
-     * @notice Requires that the amount of Ether sent is greater than the minimum amount (one EGC token).
-     */
-    // function buyEgc() internal {
-    //     if (msg.value < oneEGC) {
-    //         emit ReceivedLessThanTarget(msg.sender, msg.value);
-    //         revert("Received amount is less than the target amount");
-    //     }
-    //     emit Received(msg.sender, msg.value);
-
-    //     payments[msg.sender].push(Payment({sender: msg.sender, amount: msg.value, time: block.timestamp}));
-    //     totalPaid[msg.sender] += msg.value;
-    //     sendEgc(msg.sender, msg.value);
-    // }
-
-    /**
      * @dev Fallback function to receive Ether.
      * This function is called when the contract receives Ether without a function being explicitly called.
      */
