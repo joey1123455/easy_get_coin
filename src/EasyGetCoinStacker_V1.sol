@@ -109,7 +109,7 @@ contract TokenStacker {
         require(rewardBasisPoint > 0, "reward basis point must be positive");
         uint tickerIDX;
 
-        bytes32 id = ProgramID.compute(ProgramID.ProgramKeyData(duration * 1 days, owner, rewardBasisPoint, tokenTicker));
+        bytes32 id = ProgramID.compute(ProgramID.ProgramKeyData(duration, owner, rewardBasisPoint, tokenTicker));
 
         // if program id exists cancel operation
         require(!programExists[id], "Program Already Created");
@@ -120,7 +120,7 @@ contract TokenStacker {
         } else {
             tickerIDX = tickerPrograms[tokenTicker].length;
         }
-        Program memory program = Program(id, 0, 0, duration, owner, rewardBasisPoint, tokenTicker, tickerIDX);
+        Program memory program = Program(id, 0, 0, duration * 1 days, owner, rewardBasisPoint, tokenTicker, tickerIDX);
         programs[id] = program;
         tickerPrograms[tokenTicker].push(program);
         emit EgcEvents.ProgramCreated(owner, id, duration);

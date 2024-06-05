@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @title Game records
@@ -25,9 +25,14 @@ contract GameHistory {
     }
 
     address private immutable owner;
-    uint256 private immutable oneEGC;
+    uint256 public oneEGC;
     address public tokenAddressEGC;
-    // address public tokenAddressEGC = address(0xa2630a1178bA5774395Aa3a21AfDD4c3E654a612);
+    address public USDCTokenAddress;
+    address public USDTTokenAddress;
+
+    ERC20 private egcToken;
+    ERC20 private USDTToken;
+    ERC20 private USDCToken;
 
     // event for EVM logging
     event OwnerSet(address indexed oldOwner, address indexed newOwner);
@@ -39,18 +44,16 @@ contract GameHistory {
     mapping(address => Payment[]) payments; //historical data for each payment
     mapping(address => uint256) totalPaid; //total amount paid by each sender
 
-    // constructor(address _tokenAddressEGC, uint _oneEGC) {
-    //     owner = msg.sender; // 'msg.sender' is sender of current call, contract deployer for a constructor
-    //     emit OwnerSet(address(0), owner);
-    //     tokenAddressEGC = _tokenAddressEGC;
-    //     oneEGC = _oneEGC;
-    // }
-
-    constructor(address _address) {
-        owner = msg.sender; // 'msg.sender' is sender of current call, contract deployer for a constructor
+    constructor(address _egcAddress, address _usdcAddress, address _usdtAddress) {
+        owner = msg.sender;
         emit OwnerSet(address(0), owner);
-        tokenAddressEGC = _address;
-        oneEGC = 2 gwei;
+        tokenAddressEGC = _egcAddress;
+        USDCTokenAddress = _usdcAddress;
+        USDTTokenAddress = _usdtAddress;
+        egcToken = ERC20(_egcAddress);
+        USDCToken = ERC20(_usdcAddress);
+        USDTToken = ERC20(_usdtAddress);
+        oneEGC = 1 * (10 ** egcToken.decimals());
     }
 
     modifier onlyOwner() {
@@ -100,8 +103,9 @@ contract GameHistory {
      * @notice Requires that the contract has enough tokens to send.
      */
     function sendEgc(address _user, uint256 _amount) private {
-        ERC20 token = ERC20(tokenAddressEGC);
-        token.transfer(_user, _amount);
+        
+        bool success = egcToken.transfer(_user, _amount);
+        require(success, "swapped failed to send easy get coin tokens");
     }
 
     /**
@@ -122,6 +126,24 @@ contract GameHistory {
         return payments[_user];
     }
 
+    function swapUSDT(uint256 _amount) public {
+        require(_amount > 0, "swap value must be positive");
+        bool usdtSwapped = USDTToken.transferFrom(msg.sender, address(this), _amount);
+        require(usdtSwapped, "approve the amount to swap and ensure balance is sufficient");
+        payments[msg.sender].push(Payment({sender: msg.sender, amount: _amount, time: block.timestamp}));
+        totalPaid[msg.sender] += _amount;
+        sendEgc(msg.sender, _amount);
+    }
+
+    function swapUSDC(uint256 _amount) public {
+        require(_amount > 0, "swap value must be positive");
+        bool usdcSwapped = USDCToken.transferFrom(msg.sender, address(this), _amount);
+        require(usdcSwapped, "approve the amount to swap and ensure balance is sufficient");
+        payments[msg.sender].push(Payment({sender: msg.sender, amount: _amount, time: block.timestamp}));
+        totalPaid[msg.sender] += _amount;
+        sendEgc(msg.sender, _amount);
+    }
+
     /**
      * @dev Fallback function to receive Ether.
      * This function is called when the contract receives Ether without a function being explicitly called.
@@ -133,7 +155,6 @@ contract GameHistory {
             revert("Received amount is less than the target amount");
         }
         emit Received(msg.sender, msg.value);
-
         payments[msg.sender].push(Payment({sender: msg.sender, amount: msg.value, time: block.timestamp}));
         totalPaid[msg.sender] += msg.value;
         sendEgc(msg.sender, msg.value);
