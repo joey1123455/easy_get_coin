@@ -126,6 +126,10 @@ contract GameHistory {
         return payments[_user];
     }
 
+    /**
+     * @dev swapUSDC function to swap USDC for EasyGetCoin.
+     * @param _amount The amount of USDC to be swapped.
+     */
     function swapUSDT(uint256 _amount) public {
         require(_amount > 0, "swap value must be positive");
         bool usdtSwapped = USDTToken.transferFrom(msg.sender, address(this), _amount);
@@ -135,6 +139,10 @@ contract GameHistory {
         sendEgc(msg.sender, _amount);
     }
 
+    /**
+     * @dev swapUSDC function to swap USDC for EasyGetCoin.
+     * @param _amount The amount of USDC to be swapped.
+     */
     function swapUSDC(uint256 _amount) public {
         require(_amount > 0, "swap value must be positive");
         bool usdcSwapped = USDCToken.transferFrom(msg.sender, address(this), _amount);

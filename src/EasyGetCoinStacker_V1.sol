@@ -158,11 +158,14 @@ contract TokenStacker {
     * @param programID - the id of the program to stake 
     * @param rewardWallet - the egc wallet to recieve rewards
     */
-    function makeStake(bytes32 programID, address rewardWallet) public payable {
+    function stakeMatic(bytes32 programID, address rewardWallet) public payable {
+
         require(msg.value > 0, "stacked value must be positive");
         uint tokenTickerIDX;
         uint addressTickerIDX;
         Program memory program = programs[programID];
+        bool matchMatic = StakeUtilities.compareStrings(program.tokenTicker, "MATIC");
+        require(matchMatic, "can only stake matic programs");
         bytes32 id = StakeUtilities.compute(StakeUtilities.StakeKeyData(msg.sender, msg.value, block.timestamp));
         if (tickerStakes[program.tokenTicker].length == 0) {
             tokenTickerIDX = 0;
@@ -184,6 +187,42 @@ contract TokenStacker {
         addressStakes[msg.sender].push(staked);
         tickerStakes[program.tokenTicker].push(staked);
         emit EgcEvents.TokenStaked(msg.sender, programID, id, msg.value);
+    }
+
+    /**
+    * 
+    */
+    function stakeEGC(bytes32 programID, address rewardWallet, uint256 _amount) public {
+        require(_amount > 0, "stacked value must be positive");
+        uint tokenTickerIDX;
+        uint addressTickerIDX;
+        Program memory program = programs[programID];
+        bool matchMatic = StakeUtilities.compareStrings(program.tokenTicker, "EGC");
+        require(matchMatic, "can only stake easygetcoin programs");
+        bytes32 id = StakeUtilities.compute(StakeUtilities.StakeKeyData(msg.sender, _amount, block.timestamp));
+        if (tickerStakes[program.tokenTicker].length == 0) {
+            tokenTickerIDX = 0;
+        } else {
+            tokenTickerIDX = tickerStakes[program.tokenTicker].length;
+        }
+
+        if (addressStakes[msg.sender].length == 0) {
+            addressTickerIDX = 0;
+        } else {
+            addressTickerIDX = addressStakes[msg.sender].length;
+        }
+        ERC20 token = ERC20(egcTokenAdd);
+        bool stackedEGC = token.transferFrom(msg.sender, address(this), _amount);
+        require(stackedEGC, "approve the amount to stack and ensure balance is sufficient");
+
+        Stake memory staked = Stake(id, msg.sender, block.timestamp, block.timestamp + program.stakeDuration, _amount, StakeUtilities.calculate(_amount, program.rewardPercentage), programID, rewardWallet, program.tokenTicker, false, tokenTickerIDX, addressTickerIDX);
+        programs[programID].unclaimedTokens += _amount;
+        programs[programID].stakesHistory += 1;
+        tickerPrograms[program.tokenTicker][programs[programID].tickerProgramIDX] = programs[programID];
+        stakes[id] = staked;
+        addressStakes[msg.sender].push(staked);
+        tickerStakes[program.tokenTicker].push(staked);
+        emit EgcEvents.TokenStaked(msg.sender, programID, id, _amount);
     }
 
     /**
